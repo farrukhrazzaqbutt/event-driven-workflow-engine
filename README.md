@@ -4,28 +4,33 @@ A production-grade, event-driven workflow orchestration engine built with **Fast
 
 ---
 
-## Architecture Overview
+## High-Level Architecture
 
 ```
-┌──────────┐       ┌────────────────┐       ┌──────────────┐
-│  Client   │──────▶│   FastAPI API   │──────▶│    Redis     │
-│  (curl)   │◀──────│   (port 8000)  │◀──────│  (state DB)  │
-└──────────┘       └───────┬────────┘       └──────────────┘
-                           │
-              ┌────────────┼────────────┐
-              ▼            ▼            ▼
-        ┌──────────┐ ┌──────────┐ ┌──────────┐
-        │  Kafka   │ │  Kafka   │ │  Kafka   │
-        │  tasks   │ │  results │ │  topics  │
-        └────┬─────┘ └────▲─────┘ └──────────┘
-             │             │
-             ▼             │
-        ┌──────────────────┴──────┐
-        │    Worker(s)            │
-        │  (consume tasks,        │
-        │   produce results)      │
-        └─────────────────────────┘
+┌─────────────┐     HTTP      ┌─────────────────┐     Redis      ┌───────┐
+│   Client    │ ◀──────────▶ │  FastAPI (API)   │ ◀────────────▶ │ Redis │
+│ (Postman)   │               │  port 8000       │                │ :6379  │
+└─────────────┘               └────────┬────────┘                └───────┘
+                                        │
+                    ┌───────────────────┼───────────────────┐
+                    │                   │                   │
+                    ▼                   ▼                   ▼
+             ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+             │ Kafka       │    │ Kafka        │    │ Orchestrator│
+             │ workflow.   │    │ workflow.    │    │ (inside API)│
+             │ tasks      │    │ results      │    │ consumes    │
+             └──────┬──────┘    └──────▲───────┘    │ results     │
+                    │                  │            └──────┬──────┘
+                    │                  │                   │
+                    ▼                  │                   │ dispatch
+             ┌─────────────┐           │                   │ ready nodes
+             │  Worker(s)  │───────────┘                   │
+             │  run steps  │  publish results               │
+             └─────────────┘                                │
+                    ▲                                      │
+                    └──────────────────────────────────────┘
 ```
+
 
 **Components:**
 
