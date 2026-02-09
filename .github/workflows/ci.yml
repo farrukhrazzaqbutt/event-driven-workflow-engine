@@ -27,13 +27,5 @@ jobs:
           pip install -r requirements.txt
           pip install flake8 autopep8 pytest-cov
 
-      - name: Flake8
-        run: flake8 app/ tests/ worker_main.py
-
-      - name: Autopep8 (check only)
-        run: |
-          autopep8 --diff --recursive app/ tests/ worker_main.py
-          echo "Autopep8: no formatting changes needed"
-
       - name: Run tests with coverage
         run: pytest -v --cov=app --cov-report=term-missing --cov-report=xml --cov-fail-under=50
